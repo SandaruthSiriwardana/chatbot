@@ -22,7 +22,18 @@ export const signupUser = async (
 };
 
 export const checkAuthStatus = async () => {
-  const res = await axios.get("/auth/auth-status");
+  const token = localStorage.getItem("jwt");
+
+  if (!token) {
+    throw new Error("Token not found in local storage");
+  }
+
+  const res = await axios.get("/auth/auth-status", {
+    headers: {
+      Authorization: `Bearer ${token}`, // Use backticks and interpolate the token
+    },
+  });
+
   if (res.status !== 200) {
     throw new Error("Unable to authenticate");
   }
@@ -31,56 +42,89 @@ export const checkAuthStatus = async () => {
 };
 
 export const sendChatRequest = async (message: string) => {
-  const res = await axios.post("/auth/new", { message });
-  if (res.status !== 200) {
-    throw new Error("Unable to send chat");
-  }
-  const data = await res.data;
-  return data;
-};
-
-
-
-export const getUserChats = async () => {
-  const token = localStorage.getItem('jwt');
+  const token = localStorage.getItem("jwt");
 
   if (!token) {
-    throw new Error('Token not found in local storage');
+    throw new Error("Token not found in local storage");
   }
 
   try {
-    const res = await axios.get('/auth/past_conversations', {
+    const res = await axios.post("/prompt/new_msg", { user_msg : message }, {
       headers: {
-        Authorization: `Bearer ${token}`, // Use backticks and interpolate the token
-      },
+        Authorization: `Bearer ${token}`, // Set the Authorization header correctly
+      }
+    });
+
+    console.log({response:res})
+
+    if (res.status !== 200) {
+      throw new Error("Unable to Get chat");
+    }
+
+    console.log({response:res})
+
+    const data = await res.data.data;
+    return data;
+  } catch (error) {
+    console.error("Error sending chat request: ", error);
+    throw error; // Re-throw the error to handle it in the component
+  }
+};
+
+export const getUserChats = async () => {
+  const token = localStorage.getItem("jwt");
+
+  if (!token) {
+    throw new Error("Token not found in local storage");
+  }
+
+  const res = await axios.get("/prompt/all-chats", {
+    headers: {
+      Authorization: `Bearer ${token}`, // Use backticks and interpolate the token
+    },
+  });
+  console.log({response:res});
+
+  if (res.status !== 200) {
+    throw new Error("Unable to send chat");
+  }
+
+  const data = await res.data;
+  return data;
+};
+
+// TODO: Implement this function
+export const deleteUserChats = async () => {
+  const token = localStorage.getItem("jwt");
+
+  if (!token) {
+    throw new Error("Token not found in local storage");
+  }
+
+  try {
+    const res = await axios.delete("/prompt/delete", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Set the Authorization header correctly
+      }
     });
 
     if (res.status !== 200) {
-      throw new Error('Unable to send chat');
+      throw new Error("Unable to Delete chat");
     }
 
-    const data = await res.data;
-    return data;
+    console.log({response:res})
+
   } catch (error) {
-    throw error;
+    console.error("Error deleting chat request: ", error);
+    throw error; // Re-throw the error to handle it in the component
   }
-};
-
-
-export const deleteUserChats = async () => {
-  const res = await axios.delete("/chat/delete");
-  if (res.status !== 200) {
-    throw new Error("Unable to delete chats");
-  }
-  const data = await res.data;
-  return data;
 };
 
 export const logoutUser = async () => {
-  const res = await axios.get("/user/logout");
+  const res = await axios.get("/auth/logout");
   if (res.status !== 200) {
     throw new Error("Unable to delete chats");
   }
-  const data = await res.data;
-  return data;
+
+  localStorage.removeItem("jwt");
 };

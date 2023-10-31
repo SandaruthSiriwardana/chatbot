@@ -1,66 +1,102 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import { Box, Avatar, Typography, Button, IconButton } from "@mui/material";
 import red from "@mui/material/colors/red";
-import { useAuth } from "../context/AuthContext";
-import ChatItem from "../components/chat/ChatItem";
 import { IoMdSend } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
-import {
-  deleteUserChats,
-  getUserChats,
-  sendChatRequest,
-} from "../helpers/api-communicator";
-import toast from "react-hot-toast";
+
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
+const ChatItem = ({
+  content,
+  role,
+}: {
+  content: string;
+  role: "user" | "assistant";
+}) => {
+  return role === "assistant" ? (
+    <Box
+      sx={{
+        display: "flex",
+        p: 2,
+        bgcolor: "#004d5612",
+        gap: 2,
+        borderRadius: 2,
+        my: 1,
+      }}
+    >
+      <Avatar sx={{ ml: "0" }}>
+        <img src="openai.png" alt="openai" width={"30px"} />
+      </Avatar>
+      <Box>
+        <Typography sx={{ fontSize: "20px" }}>{content}</Typography>
+      </Box>
+    </Box>
+  ) : (
+    <Box
+      sx={{
+        display: "flex",
+        p: 2,
+        bgcolor: "#004d56",
+        gap: 2,
+        borderRadius: 2,
+      }}
+    >
+      <Avatar sx={{ ml: "0", bgcolor: "black", color: "white" }}>U</Avatar>
+      <Box>
+        <Typography sx={{ fontSize: "20px" }}>{content}</Typography>
+      </Box>
+    </Box>
+  );
+};
+
 const Chat = () => {
-  const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const auth = useAuth();
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const handleSubmit = async () => {
-    const content = inputRef.current?.value as string;
-    if (inputRef && inputRef.current) {
-      inputRef.current.value = "";
-    }
-    const newMessage: Message = { role: "user", content };
-    setChatMessages((prev) => [...prev, newMessage]);
-    const chatData = await sendChatRequest(content);
-    setChatMessages([...chatData.chats]);
-    //
+  const [newMessage, setNewMessage] = useState<string>("");
+  const chatContainerRef = useRef(null); // Create a ref for the chat container
+
+  // Function to add a dummy response from the assistant
+  const addAssistantResponse = () => {
+    const assistantMessage: Message = {
+      role: "assistant",
+      content: "This is Chad Llama",
+    };
+    setChatMessages((prev) => [...prev, assistantMessage]);
   };
-  const handleDeleteChats = async () => {
-    try {
-      toast.loading("Deleting Chats", { id: "deletechats" });
-      await deleteUserChats();
-      setChatMessages([]);
-      toast.success("Deleted Chats Successfully", { id: "deletechats" });
-    } catch (error) {
-      console.log(error);
-      toast.error("Deleting chats failed", { id: "deletechats" });
+
+  // Initial message from the assistant
+  // This message is displayed when the user visits the chat
+  const initialAssistantMessage: Message = {
+    role: "assistant",
+    content: "Hi, I am a banking chatbot. How can I help you today?",
+  };
+
+  // Display the initial message from the assistant when the component is mounted
+  useState(() => {
+    setChatMessages([initialAssistantMessage]);
+  }, []);
+
+  const handleSubmit = () => {
+    if (newMessage.trim() !== "") {
+      const userMessage: Message = { role: "user", content: newMessage };
+      setChatMessages((prev) => [...prev, userMessage]);
+      setNewMessage(""); // Clear the input field
+      // Add a dummy response from the assistant
+      addAssistantResponse();
+
+      // Scroll to the last message
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
     }
   };
-  useLayoutEffect(() => {
-    if (auth?.isLoggedIn && auth.user) {
-      toast.loading("Loading Chats", { id: "loadchats" });
-      getUserChats()
-        .then((data) => {
-          setChatMessages([...data.chats]);
-          toast.success("Successfully loaded chats", { id: "loadchats" });
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error("Loading Failed", { id: "loadchats" });
-        });
-    }
-  }, [auth]);
-  useEffect(() => {
-    if (!auth?.user) {
-      return navigate("/login");
-    }
-  }, [auth]);
+
+  const handleDeleteChats = () => {
+    // Set the chat messages to include only the initial assistant message
+    setChatMessages([initialAssistantMessage]);
+  };
+
   return (
     <Box
       sx={{
@@ -74,7 +110,7 @@ const Chat = () => {
     >
       <Box
         sx={{
-          display: { md: "flex", xs: "none", sm: "none" },
+          display: "flex",
           flex: 0.2,
           flexDirection: "column",
         }}
@@ -99,8 +135,7 @@ const Chat = () => {
               fontWeight: 700,
             }}
           >
-            {auth?.user?.name[0]}
-            {auth?.user?.name.split(" ")[1][0]}
+            A
           </Avatar>
           <Typography sx={{ mx: "auto", fontFamily: "work sans" }}>
             You are talking to a ChatBOT
@@ -131,26 +166,16 @@ const Chat = () => {
       <Box
         sx={{
           display: "flex",
-          flex: { md: 0.8, xs: 1, sm: 1 },
+          flex: 0.8,
           flexDirection: "column",
           px: 3,
         }}
       >
-        <Typography
-          sx={{
-            fontSize: "40px",
-            color: "white",
-            mb: 2,
-            mx: "auto",
-            fontWeight: "600",
-          }}
-        >
-          Model - GPT 3.5 Turbo
-        </Typography>
         <Box
+          ref={chatContainerRef} // Attach the ref to the container
           sx={{
             width: "100%",
-            height: "60vh",
+            height: "70vh",
             borderRadius: 3,
             mx: "auto",
             display: "flex",
@@ -162,10 +187,10 @@ const Chat = () => {
           }}
         >
           {chatMessages.map((chat, index) => (
-            //@ts-ignore
             <ChatItem content={chat.content} role={chat.role} key={index} />
           ))}
         </Box>
+
         <div
           style={{
             width: "100%",
@@ -175,19 +200,29 @@ const Chat = () => {
             margin: "auto",
           }}
         >
-          {" "}
-          <input
-            ref={inputRef}
-            type="text"
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && e.shiftKey) {
+                // Add a new line character
+                setNewMessage((prev) => prev + "\n");
+              } else if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); // Prevent the default Enter key behavior
+                handleSubmit(); // Send the message
+              }
+            }}
             style={{
               width: "100%",
               backgroundColor: "transparent",
-              padding: "30px",
+              padding: "10px", // Reduce padding for better appearance
               border: "none",
               outline: "none",
               color: "white",
               fontSize: "20px",
+              minHeight: "50px", // Adjust the minimum height to accommodate the text
             }}
+            placeholder="Type your message..."
           />
           <IconButton onClick={handleSubmit} sx={{ color: "white", mx: 1 }}>
             <IoMdSend />
@@ -196,6 +231,7 @@ const Chat = () => {
       </Box>
     </Box>
   );
+
 };
 
 export default Chat;

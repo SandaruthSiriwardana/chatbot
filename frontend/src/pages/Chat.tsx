@@ -1,7 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Box, Avatar, Typography, Button, IconButton } from "@mui/material";
 import red from "@mui/material/colors/red";
 import { IoMdSend } from "react-icons/io";
+import axios from "axios";
+
+import {
+  getUserChats,
+  sendChatRequest,
+  deleteUserChats,
+} from "../helpers/api-communicator";
 
 type Message = {
   role: "user" | "assistant";
@@ -54,47 +61,82 @@ const ChatItem = ({
 const Chat = () => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
+  const [language, setLanguage] = useState<string>("English"); // Default language is English
   const chatContainerRef = useRef(null); // Create a ref for the chat container
 
-  // Function to add a dummy response from the assistant
-  const addAssistantResponse = () => {
-    const assistantMessage: Message = {
-      role: "assistant",
-      content: "This is Chad Llama",
+  useEffect(() => {
+    // Fetch user chats and append to chatMessages
+    const fetchChatHistory = async () => {
+      try {
+        const chatHistory = await getUserChats();
+
+        console.log(chatHistory);
+
+        // Create an array of messages from chatHistory
+        const chatMessagesFromHistory = chatHistory.chats.map((message) => ({
+          role: message.role,
+          content: message.content,
+        }));
+
+        console.log(chatHistory);
+
+        // Add the initial assistant message to the beginning
+        const initialAssistantMessage: Message = {
+          role: "assistant",
+          content: "Hi, I am a banking chatbot. How can I help you today?",
+        };
+
+        setChatMessages([initialAssistantMessage, ...chatMessagesFromHistory]);
+
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop =
+            chatContainerRef.current.scrollHeight;
+        }
+      } catch (error) {
+        console.error("Error fetching chat history: ", error);
+      }
     };
-    setChatMessages((prev) => [...prev, assistantMessage]);
-  };
 
-  // Initial message from the assistant
-  // This message is displayed when the user visits the chat
-  const initialAssistantMessage: Message = {
-    role: "assistant",
-    content: "Hi, I am a banking chatbot. How can I help you today?",
-  };
-
-  // Display the initial message from the assistant when the component is mounted
-  useState(() => {
-    setChatMessages([initialAssistantMessage]);
+    fetchChatHistory();
   }, []);
 
-  const handleSubmit = () => {
-    if (newMessage.trim() !== "") {
-      const userMessage: Message = { role: "user", content: newMessage };
-      setChatMessages((prev) => [...prev, userMessage]);
-      setNewMessage(""); // Clear the input field
-      // Add a dummy response from the assistant
-      addAssistantResponse();
-
-      // Scroll to the last message
-      if (chatContainerRef.current) {
-        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-      }
+  const handleDeleteChats = async () => {
+    try {
+      await deleteUserChats();
+      const initialAssistantMessage: Message = {
+        role: "assistant",
+        content: "Hi, I am a banking chatbot. How can I help you today?",
+      };
+      setChatMessages([initialAssistantMessage]);
+    } catch (error) {
+      console.error("Error deleting chats: ", error);
     }
   };
 
-  const handleDeleteChats = () => {
-    // Set the chat messages to include only the initial assistant message
-    setChatMessages([initialAssistantMessage]);
+  const handleSubmit = async () => {
+    if (newMessage.trim() !== "") {
+      const userMessage: Message = { role: "user", content: newMessage };
+      setChatMessages((prev) => [...prev, userMessage]);
+      setNewMessage("");
+
+      // Send user's message to the backend and get a response
+      try {
+        const response = await sendChatRequest(newMessage);
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: response,
+        };
+        setChatMessages((prev) => [...prev, assistantMessage]);
+
+        // Scroll to the last message
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop =
+            chatContainerRef.current.scrollHeight;
+        }
+      } catch (error) {
+        console.error("Error sending chat request: ", error);
+      }
+    }
   };
 
   return (
@@ -137,31 +179,66 @@ const Chat = () => {
           >
             A
           </Avatar>
-          <Typography sx={{ mx: "auto", fontFamily: "work sans" }}>
-            You are talking to a ChatBOT
+          <Typography
+            sx={{ mx: "auto", fontFamily: "work sans", my: 0.25, px: 3 }}
+          >
+            Hello I am BotMora, your personal banking assistant.
           </Typography>
-          <Typography sx={{ mx: "auto", fontFamily: "work sans", my: 4, p: 3 }}>
-            You can ask some questions related to Knowledge, Business, Advices,
-            Education, etc. But avoid sharing personal information
+          <Typography
+            sx={{ mx: "auto", fontFamily: "work sans", my: 3, px: 3 }}
+          >
+            Looking for an AI-powered assistant to help with anything you need?
+            Our lightning-fast chatbot is here to provide accurate answers and
+            valuable insights. Experience the power of AI today!
           </Typography>
-          <Button
-            onClick={handleDeleteChats}
-            sx={{
-              width: "200px",
-              my: "auto",
-              color: "white",
-              fontWeight: "700",
+
+          {/* put a drop down with three options English, Tamil and Sinhala */}
+          <Typography
+            sx={{ mx: "auto", fontFamily: "work sans", my: 1, px: 3 }}
+          >
+            Select your language
+          </Typography>
+          <select
+            style={{
+              width: "60%",
+              height: "30px",
               borderRadius: 3,
-              mx: "auto",
-              bgcolor: red[300],
-              ":hover": {
-                bgcolor: red.A400,
-              },
+              alignSelf: "center",
+              my: 3,
+              px: 3,
+              fontSize: 16,
+              backgroundColor: "rgb(17,29,39)",
+              color: "white",
+              fontFamily: "work sans"
+            }}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+              axios.defaults.headers.common["Accept-Language"] =
+                e.target.value;
             }}
           >
-            Clear Conversation
-          </Button>
+            <option value="English" style={{fontFamily:"work sans"}}>English</option>
+            <option value="Tamil" style={{fontFamily:"work sans"}}>Tamil</option>
+            <option value="Sinhala" style={{fontFamily:"work sans"}}>Sinhala</option>
+          </select>
         </Box>
+        <Button
+          onClick={handleDeleteChats}
+          sx={{
+            width: "200px",
+            my: "auto",
+            color: "white",
+            fontWeight: "700",
+            borderRadius: 3,
+            mx: "auto",
+            bgcolor: red[300],
+            ":hover": {
+              bgcolor: red.A400,
+            },
+          }}
+        >
+          Clear Conversation
+        </Button>
       </Box>
       <Box
         sx={{
@@ -231,7 +308,6 @@ const Chat = () => {
       </Box>
     </Box>
   );
-
 };
 
 export default Chat;

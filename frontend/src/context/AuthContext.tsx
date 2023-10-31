@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setUser({ email: data.email, name: data.name });
       setIsLoggedIn(true);
+      localStorage.setItem("jwt", data.token);
     }
   };
   const signup = async (name: string, email: string, password: string) => {

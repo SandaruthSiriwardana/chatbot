@@ -31,7 +31,7 @@ export const checkAuthStatus = async () => {
 };
 
 export const sendChatRequest = async (message: string) => {
-  const res = await axios.post("/auth/past_conversations", { message });
+  const res = await axios.post("/auth/new", { message });
   if (res.status !== 200) {
     throw new Error("Unable to send chat");
   }
@@ -39,14 +39,33 @@ export const sendChatRequest = async (message: string) => {
   return data;
 };
 
+
+
 export const getUserChats = async () => {
-  const res = await axios.get("/auth/past_conversations");
-  if (res.status !== 200) {
-    throw new Error("Unable to send chat");
+  const token = localStorage.getItem('jwt');
+
+  if (!token) {
+    throw new Error('Token not found in local storage');
   }
-  const data = await res.data;
-  return data;
+
+  try {
+    const res = await axios.get('/auth/past_conversations', {
+      headers: {
+        Authorization: `Bearer ${token}`, // Use backticks and interpolate the token
+      },
+    });
+
+    if (res.status !== 200) {
+      throw new Error('Unable to send chat');
+    }
+
+    const data = await res.data;
+    return data;
+  } catch (error) {
+    throw error;
+  }
 };
+
 
 export const deleteUserChats = async () => {
   const res = await axios.delete("/chat/delete");

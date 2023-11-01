@@ -31,13 +31,13 @@ const Home = () => {
           }}
         >
           <img
-            src="robot.png"
+            src="2.png"
             alt="robot"
             style={{ width: "200px", margin: "auto" }}
           />
           <img
-            className="image-inverted rotate"
-            src="openai.png"
+            // className="image-inverted rotate"
+            src="logo.png"
             alt="openai"
             style={{ width: "200px", margin: "auto" }}
           />

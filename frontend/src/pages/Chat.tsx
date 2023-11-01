@@ -3,6 +3,8 @@ import { Box, Avatar, Typography, Button, IconButton } from "@mui/material";
 import red from "@mui/material/colors/red";
 import { IoMdSend } from "react-icons/io";
 import axios from "axios";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 
 import {
   getUserChats,
@@ -18,9 +20,14 @@ type Message = {
 const ChatItem = ({
   content,
   role,
+  onThumbsUp,
+  onThumbsDown,
+  isFirstMessage,
 }: {
   content: string;
   role: "user" | "assistant";
+  onThumbsUp: () => void;
+  onThumbsDown: () => void;
 }) => {
   return role === "assistant" ? (
     <Box
@@ -34,10 +41,16 @@ const ChatItem = ({
       }}
     >
       <Avatar sx={{ ml: "0" }}>
-        <img src="logo.png" alt="openai" width={"30px"} />
+        <img src="logo.png" alt="openai" width={"45px"} />
       </Avatar>
       <Box>
         <Typography sx={{ fontSize: "20px" }}>{content}</Typography>
+        <Button variant="contained" onClick={onThumbsUp} style={{ backgroundColor: "transparent",boxShadow: "none",fontSize: "24px"}}>
+          👍
+        </Button>
+        <Button variant="contained" onClick={onThumbsDown}style={{ backgroundColor: "transparent",boxShadow: "none",fontSize: "24px" }}>
+          👎
+        </Button>
       </Box>
     </Box>
   ) : (
@@ -141,6 +154,14 @@ const Chat = () => {
         console.error("Error sending chat request: ", error);
       }
     }
+  };
+
+  const handleThumbsUp = () => {
+    // Handle the thumbs up action (e.g., send feedback to your backend)
+  };
+
+  const handleThumbsDown = () => {
+    // Handle the thumbs down action (e.g., send feedback to your backend)
   };
 
   return (
@@ -268,7 +289,13 @@ const Chat = () => {
           }}
         >
           {chatMessages.map((chat, index) => (
-            <ChatItem content={chat.content} role={chat.role} key={index} />
+            <ChatItem
+              content={chat.content}
+              role={chat.role}
+              key={index}
+              onThumbsUp={handleThumbsUp} // Pass the thumbs up action handler
+              onThumbsDown={handleThumbsDown} // Pass the thumbs down action handler
+            />
           ))}
         </Box>
 

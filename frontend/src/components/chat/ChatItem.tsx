@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Avatar, Typography } from "@mui/material";
+import { Box, Avatar, Typography, Button } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coldarkDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -26,16 +26,21 @@ function isCodeBlock(str: string) {
   }
   return false;
 }
+
 const ChatItem = ({
   content,
   role,
+  onThumbsUp,
+  onThumbsDown,
 }: {
   content: string;
   role: "user" | "assistant";
+  onThumbsUp: () => void;
+  onThumbsDown: () => void;
 }) => {
   const messageBlocks = extractCodeFromString(content);
   const auth = useAuth();
-  return role == "assistant" ? (
+  return role === "assistant" ? (
     <Box
       sx={{
         display: "flex",
@@ -64,6 +69,12 @@ const ChatItem = ({
               <Typography sx={{ fontSize: "20px" }}>{block}</Typography>
             )
           )}
+        <Button variant="contained" onClick={onThumbsUp}>
+          Thumbs Up
+        </Button>
+        <Button variant="contained" onClick={onThumbsDown}>
+          Thumbs Down
+        </Button>
       </Box>
     </Box>
   ) : (
@@ -76,10 +87,7 @@ const ChatItem = ({
         borderRadius: 2,
       }}
     >
-      <Avatar sx={{ ml: "0", bgcolor: "black", color: "white" }}>
-        {auth?.user?.name[0]}
-        {auth?.user?.name.split(" ")[1][0]}
-      </Avatar>
+      <Avatar sx={{ ml: "0", bgcolor: "black", color: "white" }}>U</Avatar>
       <Box>
         {!messageBlocks && (
           <Typography sx={{ fontSize: "20px" }}>{content}</Typography>

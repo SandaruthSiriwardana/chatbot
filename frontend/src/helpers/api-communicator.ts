@@ -41,7 +41,7 @@ export const checkAuthStatus = async () => {
   return data;
 };
 
-export const sendChatRequest = async (message: string) => {
+export const sendChatRequest = async (message: string, language: string) => {
   const token = localStorage.getItem("jwt");
 
   if (!token) {
@@ -49,9 +49,9 @@ export const sendChatRequest = async (message: string) => {
   }
 
   try {
-    const res = await axios.post("/prompt/new_msg", { user_msg : message }, {
+    const res = await axios.post("/prompt/new_msg", { user_msg : message, lang: language }, {
       headers: {
-        Authorization: `Bearer ${token}`, // Set the Authorization header correctly
+        Authorization: `Bearer ${token}`,
       }
     });
 

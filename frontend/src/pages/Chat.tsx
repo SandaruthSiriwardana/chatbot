@@ -70,7 +70,7 @@ const Chat = () => {
       try {
         const chatHistory = await getUserChats();
 
-        console.log(chatHistory);
+        // console.log(chatHistory);
 
         // Create an array of messages from chatHistory
         const chatMessagesFromHistory = chatHistory.chats.map((message) => ({
@@ -78,7 +78,7 @@ const Chat = () => {
           content: message.content,
         }));
 
-        console.log(chatHistory);
+        // console.log(chatHistory);
 
         // Add the initial assistant message to the beginning
         const initialAssistantMessage: Message = {
@@ -108,6 +108,10 @@ const Chat = () => {
         content: "Hi, I am a banking chatbot. How can I help you today?",
       };
       setChatMessages([initialAssistantMessage]);
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop =
+          chatContainerRef.current.scrollHeight;
+      }
     } catch (error) {
       console.error("Error deleting chats: ", error);
     }
@@ -121,7 +125,7 @@ const Chat = () => {
 
       // Send user's message to the backend and get a response
       try {
-        const response = await sendChatRequest(newMessage);
+        const response = await sendChatRequest(newMessage, language);
         const assistantMessage: Message = {
           role: "assistant",
           content: response,

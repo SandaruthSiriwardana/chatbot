@@ -13,7 +13,7 @@ const Footer = () => {
         }}
       >
         <p style={{ fontSize: "30px", textAlign: "center", padding: "20px" }}>
-          Built With  Sanujen Premkumar(200583P) -  Joel Sathiyendra Thiyaheswaran(200590J) -  Sandaruth Siriwardana(200607V)
+          Built With ❤️
           {/* <span>
             <Link
               style={{ color: "white" }}

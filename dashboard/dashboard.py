@@ -214,7 +214,7 @@ def main():
         slider_col = st.columns(8)
         # Place the slider in the first column
         with slider_col[0]:
-            selection = st.select_slider("Choose", options=["Day", "Hour"])
+            selection = st.select_slider("Select", options=["Day", "Hour"])
 
         if selection == "Day":
             # Display the interactive chart

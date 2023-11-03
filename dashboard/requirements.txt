@@ -1,0 +1,5 @@
+streamlit
+Pyrebase4
+matplotlib
+pandas
+plotly

@@ -5,17 +5,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 
+with open("firebase_config.json", "r") as f:
+    firebaseConfig = json.load(f)
+
 # Firebase configuration
-firebaseConfig = {
-    "apiKey": "AIzaSyDTrPMLJ9PnNqPPiY4KETnMAkNXSDVf1iM",
-    "authDomain": "botmora-25373.firebaseapp.com",
-    "databaseURL": "https://botmora-25373-default-rtdb.firebaseio.com",
-    "projectId": "botmora-25373",
-    "storageBucket": "botmora-25373.appspot.com",
-    "messagingSenderId": "223313770308",
-    "appId": "1:223313770308:web:bdb2bb2e428ddf11a70911",
-    "measurementId": "G-ZPYWSE9S0J",
-}
+
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 pyrebase_db = firebase.database()
